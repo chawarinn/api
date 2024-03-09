@@ -27,36 +27,69 @@ export const router = express.Router();
     });
   });
 
-  router.post("/win", (req, res) => {
-    let vote : Vote = req.body;
-    let sql ="INSERT INTO `vote`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
-      
-    sql = mysql.format(sql, [   
-     vote.photoID,
-     vote.score,
-     1
-    ]);
+router.post("/win", (req, res) => {
+  let vote : Vote = req.body;
+  let sql ="INSERT INTO `vote`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
+    
+  sql = mysql.format(sql, [   
+   vote.photoID,
+   vote.score,
+   1
+  ]);
     conn.query(sql, (err, result) => {
       if (err) throw err;
-      res
-        .status(201)
-        .json({ affected_row: result.affectedRows, last_idx: result.insertId });
-    });
-  });
 
-  router.post("/lose", (req, res) => {
-    let vote : Vote = req.body;
-    let sql ="INSERT INTO `vote`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
-      
-    sql = mysql.format(sql, [   
-     vote.photoID,
-     vote.score,
-     0
-    ]);
-    conn.query(sql, (err, result) => {
-      if (err) throw err;
-      res
-        .status(201)
-        .json({ affected_row: result.affectedRows, last_idx: result.insertId });
+      let photoID = vote.photoID;
+      let totalScoreSql = "SELECT SUM(vote.score) AS total_score FROM vote JOIN photo ON photo.photoID = vote.photoID WHERE vote.photoID = ?";
+      totalScoreSql = mysql.format(totalScoreSql, [photoID]);
+      conn.query(totalScoreSql, (err, result) => {
+        if (err) throw err;
+        const totalScore = result[0].total_score;
+
+        let updateSql = "UPDATE photo SET sumscore = ? WHERE photoID = ?";
+        updateSql = mysql.format(updateSql, [totalScore, photoID]);
+        conn.query(updateSql, (updateErr, updateResult) => {
+          if (updateErr) throw updateErr;
+          res.status(201).json({
+            affected_row: result.affectedRows,
+            last_idx: result.insertId,
+            updated_score: totalScore
+          });
+        });
+      });
     });
   });
+  
+
+router.post("/lose", (req, res) => {
+  let vote = req.body;
+  let sql = "INSERT INTO `vote`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
+
+  sql = mysql.format(sql, [
+    vote.photoID,
+    vote.score,
+    0
+  ]);
+  conn.query(sql, (err, result) => {
+    if (err) throw err;
+
+    let photoID = vote.photoID;
+    let totalScoreSql = "SELECT SUM(vote.score) AS total_score FROM vote JOIN photo ON photo.photoID = vote.photoID WHERE vote.photoID = ?";
+    totalScoreSql = mysql.format(totalScoreSql, [photoID]);
+    conn.query(totalScoreSql, (err, result) => {
+      if (err) throw err;
+      const totalScore = result[0].total_score;
+
+      let updateSql = "UPDATE photo SET sumscore = ? WHERE photoID = ?";
+      updateSql = mysql.format(updateSql, [totalScore, photoID]);
+      conn.query(updateSql, (updateErr, updateResult) => {
+        if (updateErr) throw updateErr;
+        res.status(201).json({
+          affected_row: result.affectedRows,
+          last_idx: result.insertId,
+          updated_score: totalScore
+        });
+      });
+    });
+  });
+});
