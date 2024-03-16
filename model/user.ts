@@ -22,3 +22,10 @@ export interface Vote {
     score:     null;
     checkvote: null;
 }
+export interface Rank {
+    rankID:  number;
+    photoID: number;
+    ranking: number;
+    score:   number;
+    date:    number;
+}

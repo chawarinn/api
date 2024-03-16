@@ -16,7 +16,6 @@ router.get("/", (req, res) => {
       res.json(result);
     });
   });
-
 // router.put("/edit/:userID",  (req, res) => {
 
 //   let id = +req.params.userID;
