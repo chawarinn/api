@@ -4,14 +4,11 @@ import multer from "multer";
 import mysql from "mysql";
 
 export const router = express.Router();
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+import { initializeApp } from "firebase/app";
+import { getStorage, ref, deleteObject, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
+
 const firebaseConfig = {
   apiKey: "AIzaSyCOBbSH5eIGRAqRlmuUk0PZFFVz8lPZXlM",
   authDomain: "playlist-award-918c1.firebaseapp.com",
@@ -24,17 +21,18 @@ const firebaseConfig = {
 
 // Initialize Firebase
 initializeApp(firebaseConfig);
+const storage = getStorage();
 
 router.get("/", (req, res) => {
-    conn.query('SELECT rankUpdate.*, photo.*, users.*  FROM rankUpdate INNER JOIN photo ON rankUpdate.photoID = photo.photoID INNER JOIN users ON photo.userID = users.userID ORDER BY rankUpdate.score DESC', (err, result)=>{
-      if (err) {
-        console.error(err);
-        res.status(500).json({ message: "Internal server error" });
-        return;
-      }
-      res.json(result);
-    });
+  conn.query('SELECT  photo.*, users.*  FROM photo INNER JOIN users ON photo.userID = users.userID ORDER BY photo.sumscore DESC', (err, result)=>{
+    if (err) {
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
+      return;
+    }
+    res.json(result);
   });
+});
 
 class FileMiddleware {
   filename = "";
@@ -58,7 +56,7 @@ router.post("/:id", fileUpload.diskLoader.single("file"), async (req, res) => {
     const snapshot = await uploadBytesResumable(storageRef,req.file!.buffer,metaData)
     const url = await getDownloadURL(snapshot.ref);
 
-    let sql = "INSERT INTO `photo`(`userID`, `photo_url`) VALUES (?,?)";
+    let sql = "INSERT INTO photo`(userID`, photo_url) VALUES (?,?)";
     sql = mysql.format(sql, [
       userID,
         url
@@ -71,4 +69,13 @@ router.post("/:id", fileUpload.diskLoader.single("file"), async (req, res) => {
         });
     });
 });
-
+router.get("/rank/latest", (req, res) => {
+  conn.query('SELECT * FROM rankUpdate WHERE date = (SELECT MAX(date) FROM rankUpdate)', (err, result)=>{
+    if (err) {
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
+      return;
+    }
+    res.json(result);
+  });
+});
