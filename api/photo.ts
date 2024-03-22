@@ -56,7 +56,7 @@ router.post("/:id", fileUpload.diskLoader.single("file"), async (req, res) => {
     const snapshot = await uploadBytesResumable(storageRef,req.file!.buffer,metaData)
     const url = await getDownloadURL(snapshot.ref);
 
-    let sql = "INSERT INTO photo`(userID`, photo_url) VALUES (?,?)";
+    let sql = "INSERT INTO photo (userID, photo_url) VALUES (?,?)";
     sql = mysql.format(sql, [
       userID,
         url
