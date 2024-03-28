@@ -5,16 +5,6 @@ import { User } from "../model/user";
 
 export const router = express.Router();
 
-// router.get("/", (req, res) => {
-//   conn.query('select * from users', (err, result, fields)=>{
-//     if (err) {
-//       console.error(err);
-//       res.status(500).json({ message: "Internal server error" });
-//       return;
-//     }
-//     res.json(result);
-//   });
-// });
 
 router.get("/:id", (req, res) => {
   let id = +req.params.id;
