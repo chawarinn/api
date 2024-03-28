@@ -24,11 +24,12 @@ router.get("/day", (req, res) => {
     res.json(result);
   });
 });
+
 router.get("/:id", (req, res) => {
     
   const photoID = req.params.id;
 
-  let sql = "select * from rankUpdate Where photoID = ? ORDER BY rankID DESC LIMIT 7";
+  let sql = "select * from rankUpdate Where photoID = ? ORDER BY rankID DESC LIMIT 1";
   sql = mysql.format(sql, [
       photoID
   ]);
@@ -39,14 +40,19 @@ router.get("/:id", (req, res) => {
       }
   });
 });
+
 router.get("/grahp/:id", (req, res) => {
   const photoID = req.params.id;
 
-  let sql = "SELECT *, DATE_FORMAT(date, '%d-%m-%Y') AS formatted_date "+
-  "FROM rankUpdate "+
-  "WHERE photoID = ? "+
-  "ORDER BY rankID "+
-  "LIMIT 7;";
+  let sql = "SELECT *, DATE_FORMAT(date, '%d-%m-%Y') AS formatted_date " +
+  "FROM (" +
+  "   SELECT * " +
+  "   FROM rankUpdate " +
+  "   WHERE photoID = ? " +
+  "   ORDER BY date DESC " + // เรียงตามวันที่จากมากไปน้อย
+  "   LIMIT 7" +
+  ") AS sub_query " +
+  "ORDER BY date ASC"; // เรียงตามวันที่จากน้อยไปมาก
   sql = mysql.format(sql, [
       photoID
   ]);
@@ -58,8 +64,8 @@ router.get("/grahp/:id", (req, res) => {
   });
 });
 
-router.get("/nowRank", (req, res) => {
 
+router.get("/nowRank", (req, res) => {
   let sql = "SELECT photoID, SUM(score) AS total_score, "+ 
   "FIND_IN_SET(photoID, ( "+ 
   "SELECT GROUP_CONCAT(photoID ORDER BY total_score DESC) "+ 

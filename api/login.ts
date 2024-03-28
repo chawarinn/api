@@ -41,7 +41,15 @@ router.get("/", (req, res) => {
 
     if (result.length > 0) {
       const userID = result[0].userID;
-      res.status(200).json({ userID: userID });
+      const userType = result[0].type; // สมมติว่ามีค่า type ในฟิลด์ข้อมูลของผู้ใช้
+
+      if (userType === 1) {
+        res.status(200).json({ userID: userID, type: userType }); // ส่งข้อมูล userID และ type กลับไปให้ Angular
+      } else if (userType === 2) {
+        res.status(200).json({ userID: userID, type: userType }); // ส่งข้อมูล userID และ type กลับไปให้ Angular
+      } else {
+        res.status(401).json({ message: "Invalid user type" }); // ค่า type ไม่ถูกต้อง
+      }
     } else {
       res.status(401).json({ message: "Invalid credentials" });
     }
@@ -55,7 +63,7 @@ router.post("/", (req, res) => {
   sql = mysql.format(sql, [
     user.username,
     1,
-    user.avatar,
+    1,
     user.email,
     user.password
   ]);

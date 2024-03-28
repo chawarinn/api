@@ -7,14 +7,14 @@ export const router = express.Router();
 
 
   router.get("/", (req, res) => {
-    conn.query('select * from vote', (err, result, fields)=>{
+    conn.query('select * from votes', (err, result, fields)=>{
       res.json(result);
     });
   });
   
   router.get("/score/:id", (req, res) => {
     const photoID = req.params.id;
-    let sql = "SELECT SUM(vote.score) AS total_score FROM vote JOIN photo ON photo.photoID = vote.photoID WHERE vote.photoID = ?";
+    let sql = "SELECT SUM(votes.score) AS total_score FROM votes JOIN photo ON photo.photoID = votes.photoID WHERE votes.photoID = ?";
     sql = mysql.format(sql, [
       photoID
     ]);
@@ -29,7 +29,7 @@ export const router = express.Router();
 
 router.post("/win", (req, res) => {
   let vote : Vote = req.body;
-  let sql ="INSERT INTO `vote`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
+  let sql ="INSERT INTO `votes`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
     
   sql = mysql.format(sql, [   
    vote.photoID,
@@ -40,7 +40,7 @@ router.post("/win", (req, res) => {
       if (err) throw err;
 
       let photoID = vote.photoID;
-      let totalScoreSql = "SELECT SUM(vote.score) AS total_score FROM vote JOIN photo ON photo.photoID = vote.photoID WHERE vote.photoID = ?";
+      let totalScoreSql = "SELECT SUM(votes.score) AS total_score FROM votes JOIN photo ON photo.photoID = votes.photoID WHERE votes.photoID = ?";
       totalScoreSql = mysql.format(totalScoreSql, [photoID]);
       conn.query(totalScoreSql, (err, result) => {
         if (err) throw err;
@@ -63,7 +63,7 @@ router.post("/win", (req, res) => {
 
 router.post("/lose", (req, res) => {
   let vote = req.body;
-  let sql = "INSERT INTO `vote`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
+  let sql = "INSERT INTO `votes`( `photoID`, `date_time`, `score`, `checkvote`) VALUES (?,CURRENT_TIME(),?,?)";
 
   sql = mysql.format(sql, [
     vote.photoID,
@@ -74,7 +74,7 @@ router.post("/lose", (req, res) => {
     if (err) throw err;
 
     let photoID = vote.photoID;
-    let totalScoreSql = "SELECT SUM(vote.score) AS total_score FROM vote JOIN photo ON photo.photoID = vote.photoID WHERE vote.photoID = ?";
+    let totalScoreSql = "SELECT SUM(votes.score) AS total_score FROM votes JOIN photo ON photo.photoID = votes.photoID WHERE votes.photoID = ?";
     totalScoreSql = mysql.format(totalScoreSql, [photoID]);
     conn.query(totalScoreSql, (err, result) => {
       if (err) throw err;
